@@ -366,14 +366,23 @@
                 const qrCodeElement = document.getElementById('qr-code');
                 qrCodeElement.innerHTML = ''; // Limpiar contenido previo
                 
-                QRCode.toCanvas(qrCodeElement, uuid, {
-                    width: 200,
+                // Crear un nuevo canvas para el QR
+                const canvas = document.createElement('canvas');
+                qrCodeElement.appendChild(canvas);
+                
+                // Generar el QR en el canvas
+                QRCode.toCanvas(canvas, uuid, {
+                    width: 180,
                     color: {
                         dark: '#9E1F1F', // Color charro red
                         light: '#F5E7D1' // Color charro light
-                    }
+                    },
+                    margin: 1
                 }, function(error) {
-                    if (error) console.error(error);
+                    if (error) {
+                        console.error('Error generando QR:', error);
+                        qrCodeElement.innerHTML = '<p>Error al generar QR</p>';
+                    }
                 });
                 
                 // Mostrar UUID en el modal
@@ -405,7 +414,7 @@
                 
             } finally {
                 // Restaurar estado del botón
-                btnText.textContent = 'Registrar Charro';
+                btnText.textContent = 'Registrar';
                 btnSpinner.style.display = 'none';
                 submitBtn.disabled = false;
             }
