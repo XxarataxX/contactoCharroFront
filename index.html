@@ -6,6 +6,8 @@
     <title>Registro</title>
     <!-- Incluir Axios desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Incluir QRCode.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Raleway:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -184,6 +186,64 @@
             color: var(--charro-dark);
             opacity: 0.8;
         }
+        
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--charro-light);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 3px solid var(--charro-gold);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .modal-title {
+            color: var(--charro-red);
+            font-family: 'Cinzel Decorative', cursive;
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+        
+        #qr-code {
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border: 2px solid var(--charro-gold);
+            border-radius: 8px;
+            max-width: 200px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: var(--charro-red);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--charro-dark);
+        }
     </style>
 </head>
 <body>
@@ -216,9 +276,19 @@
         <div id="response-message"></div>
     </div>
     
-    <!-- <footer>
-        ¡Viva la tradición charra! • © 2023
-    </footer> -->
+    <!-- Modal para mostrar el QR -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 class="modal-title">¡Tu Registro!</h2>
+            <p>Guarda este código QR como comprobante de tu registro</p>
+            <div id="qr-code"></div>
+            <p id="modal-uuid" style="word-break: break-all; font-size: 0.8rem;"></p>
+            <div class="modal-footer">
+                Presiona ESC o haz clic fuera para cerrar
+            </div>
+        </div>
+    </div>
 
     <script>
         // Función para generar UUID
@@ -230,6 +300,29 @@
                     return v.toString(16);
                 });
         }
+
+        // Manejar el modal
+        const modal = document.getElementById('registrationModal');
+        const modalClose = document.querySelector('.modal-close');
+        
+        // Cerrar modal al hacer clic en la X
+        modalClose.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                modal.style.display = 'none';
+            }
+        });
 
         // Manejar el envío del formulario con Axios
         document.getElementById('contactForm').addEventListener('submit', async function(e) {
@@ -262,12 +355,32 @@
                 });
                 
                 // Mostrar mensaje de éxito
-                responseMessage.textContent = '¡Charro registrado con éxito! ID: ' + response.data.id;
+                responseMessage.textContent = '¡Charro registrado con éxito!';
                 responseMessage.className = 'success';
                 responseMessage.style.display = 'block';
                 
                 // Limpiar el formulario
                 document.getElementById('contactForm').reset();
+                
+                // Generar y mostrar QR
+                const qrCodeElement = document.getElementById('qr-code');
+                qrCodeElement.innerHTML = ''; // Limpiar contenido previo
+                
+                QRCode.toCanvas(qrCodeElement, uuid, {
+                    width: 200,
+                    color: {
+                        dark: '#9E1F1F', // Color charro red
+                        light: '#F5E7D1' // Color charro light
+                    }
+                }, function(error) {
+                    if (error) console.error(error);
+                });
+                
+                // Mostrar UUID en el modal
+                document.getElementById('modal-uuid').textContent = uuid;
+                
+                // Mostrar modal
+                modal.style.display = 'flex';
                 
             } catch (error) {
                 // Manejar errores
